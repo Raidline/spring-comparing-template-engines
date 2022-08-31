@@ -1,14 +1,23 @@
 package com.jeroenreijn.examples.view;
 
-import org.springframework.web.servlet.view.AbstractTemplateViewResolver;
+import com.jeroenreijn.examples.view.response.ReactiveResponseWriterImpl;
+import org.springframework.web.reactive.result.view.View;
+import org.springframework.web.reactive.result.view.ViewResolver;
+import org.springframework.web.reactive.result.view.ViewResolverSupport;
+import reactor.core.publisher.Mono;
 
-public class RockerViewResolver extends AbstractTemplateViewResolver {
+import java.util.Locale;
+
+public class RockerViewResolver extends ViewResolverSupport implements ViewResolver {
 	public RockerViewResolver() {
-		this.setViewClass(this.requiredViewClass());
 	}
-
+	
 	@Override
-	protected Class<?> requiredViewClass() {
-		return RockerView.class;
+	public Mono<View> resolveViewName(String viewName, Locale locale) {
+		if (!viewName.contains("rocker")) {
+			return Mono.empty();
+		}
+		
+		return Mono.just(new RockerView(new ReactiveResponseWriterImpl<>()));
 	}
 }

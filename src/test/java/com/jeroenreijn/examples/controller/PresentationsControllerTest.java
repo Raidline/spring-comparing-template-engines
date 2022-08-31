@@ -26,21 +26,13 @@ public class PresentationsControllerTest {
 
 	@Test
 	public void should_return_jsp_view() throws Exception {
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setServerName("localhost");
-		request.setRequestURI("/");
-		
-		String view = controller.home(request, modelMap);
+		String view = controller.home(modelMap);
 		assertEquals("index-jsp", view);
 	}
 
 	@Test
 	public void should_return_other_view() throws Exception {
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setServerName("localhost");
-		request.setRequestURI("/test");
-		
-		final String view = controller.showList(request, "test", modelMap);
+		final String view = controller.showList("test", modelMap);
 		assertEquals("index-test", view);
 	}
 

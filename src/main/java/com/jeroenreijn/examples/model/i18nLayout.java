@@ -2,8 +2,8 @@ package com.jeroenreijn.examples.model;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.MessageSource;
 import org.springframework.web.servlet.LocaleResolver;
@@ -12,18 +12,13 @@ import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template.Fragment;
 
 public class i18nLayout implements Mustache.Lambda {
-	private HttpServletRequest request;
 	private MessageSource messageSource;
-	private LocaleResolver localeResolver;
-
-	public i18nLayout(HttpServletRequest request, MessageSource messageSource, LocaleResolver localeResolver) {
-		this.request = request;
+	public i18nLayout(MessageSource messageSource) {
 		this.messageSource = messageSource;
-		this.localeResolver = localeResolver;
 	}
 
 	public String message(String key) {
-		String text = messageSource.getMessage(key, null, localeResolver.resolveLocale(request));
+		String text = messageSource.getMessage(key, null, Locale.getDefault());
 
 		return text;
 	}
@@ -31,7 +26,7 @@ public class i18nLayout implements Mustache.Lambda {
 	@Override
 	public void execute(Fragment frag, Writer out) throws IOException {
 		String key = frag.execute();
-		String text = messageSource.getMessage(key, null, localeResolver.resolveLocale(request));
+		String text = messageSource.getMessage(key, null, Locale.getDefault());
 
 		out.write(text);
 	}

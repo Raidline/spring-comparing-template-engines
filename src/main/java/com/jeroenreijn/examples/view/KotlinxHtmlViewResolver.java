@@ -1,14 +1,24 @@
 package com.jeroenreijn.examples.view;
 
+import com.jeroenreijn.examples.view.response.ReactiveResponseWriterImpl;
+import org.springframework.web.reactive.result.view.View;
+import org.springframework.web.reactive.result.view.ViewResolver;
+import org.springframework.web.reactive.result.view.ViewResolverSupport;
 import org.springframework.web.servlet.view.AbstractTemplateViewResolver;
+import reactor.core.publisher.Mono;
 
-public class KotlinxHtmlViewResolver extends AbstractTemplateViewResolver {
+import java.util.Locale;
+
+public class KotlinxHtmlViewResolver extends ViewResolverSupport implements ViewResolver {
 	public KotlinxHtmlViewResolver() {
-		this.setViewClass(this.requiredViewClass());
 	}
-
+	
 	@Override
-	protected Class<?> requiredViewClass() {
-		return KotlinxHtmlView.class;
+	public Mono<View> resolveViewName(String viewName, Locale locale) {
+		if (!viewName.contains("kotlinx")) {
+			return Mono.empty();
+		}
+		
+		return Mono.just(new KotlinxHtmlView(new ReactiveResponseWriterImpl<>()));
 	}
 }

@@ -23,8 +23,6 @@
 		<chunk-springmvc.version>0.1.0</chunk-springmvc.version>
 		<freemarker.version>2.3.28</freemarker.version>
 		<httl-springmvc.version>1.0.11</httl-springmvc.version>
-		<velocity.version>1.7</velocity.version>
-		<velocity-tools.version>2.0</velocity-tools.version>
 		<spring-jade4j.version>1.2.7</spring-jade4j.version>
 		<mustache-spring-view.version>1.4</mustache-spring-view.version>
 		<mustache-java.version>0.9.5</mustache-java.version>
@@ -59,14 +57,14 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 
-		<dependency>
+		<!--<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
 			<scope>compile</scope>
-		</dependency>
+		</dependency>-->
 
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -85,11 +83,11 @@
 			<version>${jquery.version}</version>
 		</dependency>
 
-		<dependency>
+		<!--<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-jasper</artifactId>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>-->
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -147,26 +145,6 @@
 			<artifactId>httl-springmvc</artifactId>
 			<version>${httl-springmvc.version}</version>
 		</dependency>
-
-
-		<dependency>
-			<groupId>org.apache.velocity</groupId>
-			<artifactId>velocity-engine-core</artifactId>
-			<version>2.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.velocity.tools</groupId>
-			<artifactId>velocity-tools-view</artifactId>
-			<version>3.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.alibaba.boot</groupId>
-			<artifactId>velocity-spring-boot-starter</artifactId>
-			<version>1.0.4.RELEASE</version>
-		</dependency>
-
 
 		<dependency>
 			<groupId>de.neuland-bfi</groupId>
@@ -262,8 +240,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-groovy-templates</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-
 
 		<dependency>
 			<groupId>nl.big-o</groupId>

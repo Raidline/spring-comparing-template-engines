@@ -1,14 +1,24 @@
 package com.jeroenreijn.examples.view;
 
-import org.springframework.web.servlet.view.AbstractTemplateViewResolver;
+import com.jeroenreijn.examples.view.response.ReactiveResponseWriterImpl;
+import org.springframework.web.reactive.result.view.View;
+import org.springframework.web.reactive.result.view.ViewResolver;
+import org.springframework.web.reactive.result.view.ViewResolverSupport;
+import reactor.core.publisher.Mono;
 
-public class HtmlFlowViewResolver extends AbstractTemplateViewResolver {
+import java.util.Locale;
+
+public class HtmlFlowViewResolver extends ViewResolverSupport implements ViewResolver {
 	public HtmlFlowViewResolver() {
-		this.setViewClass(this.requiredViewClass());
 	}
-
+	
 	@Override
-	protected Class<?> requiredViewClass() {
-		return HtmlFlowView.class;
+	public Mono<View> resolveViewName(String viewName, Locale locale) {
+		
+		if (!viewName.contains("htmlFlow")) {
+			return Mono.empty();
+		}
+		
+		return Mono.just(new HtmlFlowView(new ReactiveResponseWriterImpl<>()));
 	}
 }

@@ -1,42 +1,63 @@
 package com.jeroenreijn.examples.view;
 
+import com.jeroenreijn.examples.model.Presentation;
+import com.jeroenreijn.examples.view.response.ReactiveResponseWriter;
 import liqp.Template;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.util.ResourceUtils;
-import org.springframework.web.servlet.view.AbstractTemplateView;
+import org.springframework.web.reactive.result.view.AbstractView;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.util.Locale;
+import java.io.IOException;
 import java.util.Map;
 
-public class LiqpView extends AbstractTemplateView {
+public class LiqpView extends AbstractView {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LiqpView.class);
-
-	@Override
-	protected void renderMergedTemplateModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
-		String templateUrl = this.getUrl();
-		File templateFile = ResourceUtils.getFile(templateUrl);
-		if (templateFile.exists()) {
-			// Liqp serializes the entire "model" to JSON Object and then to Map. This fails for custom and Spring classes
-			model.remove("springMacroRequestContext");
-			model.remove("org.springframework.validation.BindingResult.i18n");
-			model.remove("i18n");
-
-			// Just in case, we need it as in all other view resolvers
-			model.put("contextPath", request.getContextPath());
-
-			String rendered = Template.parse(templateFile).render(model);
-			response.getWriter().write(rendered);
-		} else {
-			LOGGER.error("Template not found: {}", templateUrl);
+	
+	private final ReactiveResponseWriter<Presentation> responseWriter;
+	
+	public LiqpView(ReactiveResponseWriter<Presentation> responseWriter) {
+		this.responseWriter = responseWriter;
+	}
+	
+	protected String renderModel(Map<String, Object> model, ServerWebExchange serverWebExchange) throws RuntimeException {
+		String templateUrl = this.getUrl(serverWebExchange);
+		try {
+			File templateFile = ResourceUtils.getFile(templateUrl);
+			if (templateFile.exists()) {
+				// Liqp serializes the entire "model" to JSON Object and then to Map. This fails for custom and Spring classes
+				model.remove("springMacroRequestContext");
+				model.remove("org.springframework.validation.BindingResult.i18n");
+				model.remove("i18n");
+				
+				// Just in case, we need it as in all other view resolvers
+				model.put("contextPath", serverWebExchange.getRequest().getPath());
+				
+				return Template.parse(templateFile).render(model);
+			} else {
+				LOGGER.error("Template not found: {}", templateUrl);
+				return "";
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
-
+	
+	@NotNull
 	@Override
-	public boolean checkResource(Locale locale) throws Exception {
-		return this.getUrl().endsWith(".liqp");
+	protected Mono<Void> renderInternal(Map<String, Object> model, MediaType mediaType, @NotNull ServerWebExchange serverWebExchange) {
+		
+		final Flux<Presentation> presentations = (Flux<Presentation>) model.get("presentations");
+		return responseWriter.write(serverWebExchange, presentations, res -> this.renderModel(model, serverWebExchange));
+	}
+	
+	private String getUrl(ServerWebExchange webExchange) {
+		return webExchange.getRequest().getPath().value();
 	}
 }

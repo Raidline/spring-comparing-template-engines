@@ -1,28 +1,29 @@
 package com.jeroenreijn.examples.view;
 
 import com.jeroenreijn.examples.model.Presentation;
-import org.springframework.web.servlet.view.AbstractTemplateView;
+import com.jeroenreijn.examples.view.response.ReactiveResponseWriter;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.result.view.AbstractView;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
 import java.util.Map;
 
-public class KotlinxHtmlView extends AbstractTemplateView {
-
+public class KotlinxHtmlView extends AbstractView {
+	
+	private final ReactiveResponseWriter<Presentation> responseWriter;
+	
+	public KotlinxHtmlView(ReactiveResponseWriter<Presentation> responseWriter) {
+		this.responseWriter = responseWriter;
+	}
+	
+	@NotNull
 	@Override
-	protected void renderMergedTemplateModel(Map<String, Object> model, HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		Iterable<Presentation> presentations = (Iterable<Presentation>) model.get("presentations");
-		String html = KotlinxHtmlIndexView.Companion.presentationsTemplate(presentations);
-
-		response.setContentLength(html.length());
-		response.setContentType("text/html");
-		response.setCharacterEncoding("UTF-8");
-
-		try (PrintWriter writer = response.getWriter()) {
-			writer.write(html);
-			writer.flush();
-		}
+	protected Mono<Void> renderInternal(Map<String, Object> model, MediaType mediaType, @NotNull ServerWebExchange serverWebExchange) {
+		
+		final Flux<Presentation> presentations = (Flux<Presentation>) model.get("presentations");
+		return responseWriter.write(serverWebExchange, presentations, KotlinxHtmlIndexView.Companion::presentationsTemplate);
 	}
 }

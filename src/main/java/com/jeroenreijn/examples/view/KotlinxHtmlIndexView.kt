@@ -5,12 +5,13 @@ import kotlinx.html.*
 import kotlinx.html.dom.createHTMLDocument
 import kotlinx.html.dom.serialize
 import kotlinx.html.stream.appendHTML
+import reactor.core.publisher.Flux
 import java.lang.StringBuilder
 
 class KotlinxHtmlIndexView {
     companion object {
 
-        fun presentationsTemplate(presentations : Iterable<Presentation> ): String {
+        fun presentationsTemplate(presentations : Flux<Presentation> ): String {
             val output = StringBuilder()
             output
                 .appendHTML()
@@ -30,7 +31,7 @@ class KotlinxHtmlIndexView {
                                     h1 { text("JFall 2013 Presentations - kotlinx.html") }
                                 }
 
-                                presentations.forEach {
+                                presentations.doOnNext {
                                     div {
                                         classes = setOf("card mb-3 shadow-sm rounded")
                                         div {

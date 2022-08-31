@@ -1,55 +1,43 @@
 package com.jeroenreijn.examples.view;
 
-import java.util.Locale;
-
+import com.jeroenreijn.examples.model.SpringMessageSourceHelper;
+import com.jeroenreijn.examples.view.response.ReactiveResponseWriterImpl;
 import org.springframework.context.MessageSource;
-import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.view.AbstractTemplateViewResolver;
+import org.springframework.web.reactive.result.view.View;
+import org.springframework.web.reactive.result.view.ViewResolver;
+import org.springframework.web.reactive.result.view.ViewResolverSupport;
 import org.trimou.Mustache;
 import org.trimou.engine.MustacheEngine;
 import org.trimou.engine.MustacheEngineBuilder;
+import reactor.core.publisher.Mono;
 
-import com.jeroenreijn.examples.model.SpringMessageSourceHelper;
+import java.util.Locale;
 
-public class TrimouViewResolver extends AbstractTemplateViewResolver {
+public class TrimouViewResolver extends ViewResolverSupport implements ViewResolver {
 	private TrimouSpringResourceTemplateLocator loader = new TrimouSpringResourceTemplateLocator();
 	private MustacheEngine engine;
 
 	public TrimouViewResolver(MessageSource messageSource) {
-		this.setViewClass(this.requiredViewClass());
-
 		this.engine = MustacheEngineBuilder.newBuilder()
 				.addTemplateLocator(loader)
 				.registerHelper("springMsg", new SpringMessageSourceHelper(messageSource))
 				.build();
 	}
-
+	
 	@Override
-	protected Class<?> requiredViewClass() {
-		return TrimouView.class;
-	}
-
-	@Override
-	public void setPrefix(final String prefix) {
-		super.setPrefix(prefix);
-		loader.setPrefix(prefix);
-	}
-
-	@Override
-	public void setSuffix(final String suffix) {
-		super.setSuffix(suffix);
-		loader.setSuffix(suffix);
-	}
-
-	@Override
-	protected View loadView(final String viewName, final Locale locale) throws Exception {
+	public Mono<View> resolveViewName(String viewName, Locale locale) {
+		
+		if (!viewName.contains("trimou")) {
+			return Mono.empty();
+		}
+		
 		Mustache mustache = engine.getMustache(viewName);
 		if (mustache != null) {
-			TrimouView trimouView = (TrimouView) super.loadView(viewName, locale);
+			TrimouView trimouView = new TrimouView(mustache, new ReactiveResponseWriterImpl<>());
 			trimouView.setMustache(mustache);
-
-			return trimouView;
+			
+			return Mono.just(trimouView);
 		}
-		return null;
+		return Mono.empty();
 	}
 }

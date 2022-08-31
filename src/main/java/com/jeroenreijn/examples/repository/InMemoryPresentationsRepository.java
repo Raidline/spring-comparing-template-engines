@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.jeroenreijn.examples.model.Presentation;
+import reactor.core.publisher.Flux;
 
 public class InMemoryPresentationsRepository implements PresentationsRepository {
 
@@ -99,7 +100,12 @@ public class InMemoryPresentationsRepository implements PresentationsRepository 
 	public Iterable<Presentation> findAll() {
 		return this.presentations.values();
 	}
-
+	
+	@Override
+	public Flux<Presentation> findAllReactive() {
+		return Flux.fromStream(() -> this.presentations.values().stream());
+	}
+	
 	@Override
 	public Optional<Presentation> findById(Long id) {
 		return Optional.of(this.presentations.get(id));
