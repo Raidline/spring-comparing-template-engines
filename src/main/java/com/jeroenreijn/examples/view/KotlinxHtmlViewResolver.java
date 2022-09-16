@@ -4,7 +4,6 @@ import com.jeroenreijn.examples.view.response.ReactiveResponseWriterImpl;
 import org.springframework.web.reactive.result.view.View;
 import org.springframework.web.reactive.result.view.ViewResolver;
 import org.springframework.web.reactive.result.view.ViewResolverSupport;
-import org.springframework.web.servlet.view.AbstractTemplateViewResolver;
 import reactor.core.publisher.Mono;
 
 import java.util.Locale;

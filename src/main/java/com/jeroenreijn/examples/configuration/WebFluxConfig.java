@@ -30,9 +30,7 @@ import org.thymeleaf.spring5.view.reactive.ThymeleafReactiveViewResolver;
 @EnableWebFlux
 public class WebFluxConfig implements ApplicationContextAware, WebFluxConfigurer {
 	private ApplicationContext applicationContext;
-
-	//TODO ADD HANDLEBARS AGAIN BUT ADD CUSTOM CODE
-	//TODO SEE SELF PROJECT
+	
 	@Override
 	public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;

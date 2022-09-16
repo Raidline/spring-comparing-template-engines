@@ -4,9 +4,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.Function;
-
 public interface ReactiveResponseWriter<T> {
     
-    <F extends Flux<T>> Mono<Void> write(ServerWebExchange exchange, F model, Function<F,String> renderFunction);
+    <F extends Flux<T>> Mono<Void> write(ServerWebExchange exchange, F model, TemplateResolver<F> renderFunction);
 }

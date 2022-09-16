@@ -1,7 +1,12 @@
 package com.jeroenreijn.examples.view;
 
+import java.io.OutputStreamWriter;
 import java.util.Map;
 
+import com.jeroenreijn.examples.model.AsyncWrapper;
+import htmlflow.StaticHtml;
+import io.reactivex.rxjava3.core.Observable;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.xmlet.htmlapifaster.EnumMediaType;
 import org.xmlet.htmlapifaster.EnumRelType;
 
@@ -9,16 +14,29 @@ import com.jeroenreijn.examples.model.Presentation;
 
 import htmlflow.DynamicHtml;
 import htmlflow.HtmlView;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.MonoSink;
 
 public class HtmlFlowIndexView {
-	public static final HtmlView<Map<String, Object>> view = DynamicHtml
-		.view(HtmlFlowIndexView::templatePresentations)
+	
+	private final OutputStreamWriter writer;
+	private final MonoSink<DataBuffer> sub;
+	private final DataBuffer buffer;
+	
+	public final HtmlView<Map<String, Object>> view = DynamicHtml
+		.view(this::templatePresentations)
 		.threadSafe();
-
-	private static void templatePresentations(DynamicHtml<Map<String, Object>> view, Map<String, Object> map) {
-		@SuppressWarnings("unchecked")
-		Iterable<Presentation> presentations = (Iterable<Presentation>) map.get("presentations");
-
+	
+	public HtmlFlowIndexView(OutputStreamWriter writer, MonoSink<DataBuffer> sub, DataBuffer buffer) {
+		this.writer = writer;
+		this.sub = sub;
+		this.buffer = buffer;
+	}
+	
+	private void templatePresentations(DynamicHtml<Map<String, Object>> view, Map<String, Object> map) {
+		Flux<Presentation> presentations = ((AsyncWrapper) map.get("presentations")).getPresentations();
+		final Observable<Presentation> observable = Observable.fromPublisher(presentations);
+		
 		view
 			.html()
 				.head()
@@ -40,31 +58,40 @@ public class HtmlFlowIndexView {
 						.div().attrClass("pb-2 mt-4 mb-3 border-bottom")
 							.h1().text("JFall 2013 Presentations - HtmlFlow").__()
 						.__() // div
-						.dynamic(container ->
-							presentations.forEach(presentation ->
-								container
-									.div().attrClass("card mb-3 shadow-sm rounded")
-										.div().attrClass("card-header")
-											.h5()
-												.of(h5 -> h5
-													.attrClass("card-title")
-													.text(presentation.getTitle() + " - " + presentation.getSpeakerName())
-												)
-											.__() // h5
-										.__() // div
-										.div()
-											.of(d -> d
-												.attrClass("card-body")
-												.text(presentation.getSummary())
-											)
-										.__() // div
-									.__() // div
-							) // foreach
+						.dynamic(__ -> observable.map(HtmlFlowIndexView::template)
+										.doOnNext(writer::append)
+										.doOnComplete(() -> {
+											writer.flush();
+											sub.success(buffer);
+										})
+										.subscribe() // foreach
 						)
 					.__() // container
 				.script().attrSrc("/webjars/jquery/3.1.1/jquery.min.js").__()
 				.script().attrSrc("/webjars/bootstrap/4.3.1/js/bootstrap.min.js").__()
 				.__() // body
 			.__(); // html
+	}
+	
+	
+	private static String template(Presentation presentation) {
+		return StaticHtml.view()
+				.div().attrClass("card mb-3 shadow-sm rounded")
+				.div().attrClass("card-header")
+				.h5()
+				.of(h5 -> h5
+						.attrClass("card-title")
+						.text(presentation.getTitle() + " - " + presentation.getSpeakerName())
+				)
+				.__() // h5
+				.__() // div
+				.div()
+				.of(d -> d
+						.attrClass("card-body")
+						.text(presentation.getSummary())
+				)
+				.__() // div
+				.__()
+				.render(); // div
 	}
 }

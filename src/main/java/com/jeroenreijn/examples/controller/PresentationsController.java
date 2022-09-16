@@ -1,6 +1,7 @@
 package com.jeroenreijn.examples.controller;
 
 
+import com.jeroenreijn.examples.model.AsyncWrapper;
 import com.jeroenreijn.examples.model.Presentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -53,7 +54,7 @@ public class PresentationsController {
 		final Flux<Presentation> presentations = presentationsService.findAllReactive().delayElements(Duration.ofSeconds(1L));
 		IReactiveDataDriverContextVariable rx = new ReactiveDataDriverContextVariable(presentations);
 		model.addAttribute("reactivedata", rx);
-		model.addAttribute("presentations", presentations);
+		model.addAttribute("presentations", new AsyncWrapper(presentations));
 		model.addAttribute("i18n", new i18nLayout(messageSource));
 		
 		return "index-" + template;

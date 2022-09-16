@@ -1,5 +1,6 @@
 package com.jeroenreijn.examples.view;
 
+import com.jeroenreijn.examples.model.AsyncWrapper;
 import com.jeroenreijn.examples.model.Presentation;
 import com.jeroenreijn.examples.view.response.ReactiveResponseWriter;
 import liqp.Template;
@@ -27,8 +28,9 @@ public class LiqpView extends AbstractView {
 	}
 	
 	protected String renderModel(Map<String, Object> model, ServerWebExchange serverWebExchange) throws RuntimeException {
-		String templateUrl = this.getUrl(serverWebExchange);
+		String templateUrl = "templates/liqp/index-liqp.liqp";
 		try {
+			//TODO cannot find file
 			File templateFile = ResourceUtils.getFile(templateUrl);
 			if (templateFile.exists()) {
 				// Liqp serializes the entire "model" to JSON Object and then to Map. This fails for custom and Spring classes
@@ -53,8 +55,8 @@ public class LiqpView extends AbstractView {
 	@Override
 	protected Mono<Void> renderInternal(Map<String, Object> model, MediaType mediaType, @NotNull ServerWebExchange serverWebExchange) {
 		
-		final Flux<Presentation> presentations = (Flux<Presentation>) model.get("presentations");
-		return responseWriter.write(serverWebExchange, presentations, res -> this.renderModel(model, serverWebExchange));
+		final Flux<Presentation> presentations = ((AsyncWrapper) model.get("presentations")).getPresentations();;
+		return responseWriter.write(serverWebExchange, presentations, (res, __, a, b) -> this.renderModel(model, serverWebExchange));
 	}
 	
 	private String getUrl(ServerWebExchange webExchange) {

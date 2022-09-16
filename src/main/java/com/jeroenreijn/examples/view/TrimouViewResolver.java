@@ -14,10 +14,10 @@ import reactor.core.publisher.Mono;
 import java.util.Locale;
 
 public class TrimouViewResolver extends ViewResolverSupport implements ViewResolver {
-	private TrimouSpringResourceTemplateLocator loader = new TrimouSpringResourceTemplateLocator();
-	private MustacheEngine engine;
+	private final MustacheEngine engine;
 
 	public TrimouViewResolver(MessageSource messageSource) {
+		TrimouSpringResourceTemplateLocator loader = new TrimouSpringResourceTemplateLocator();
 		this.engine = MustacheEngineBuilder.newBuilder()
 				.addTemplateLocator(loader)
 				.registerHelper("springMsg", new SpringMessageSourceHelper(messageSource))
@@ -31,7 +31,8 @@ public class TrimouViewResolver extends ViewResolverSupport implements ViewResol
 			return Mono.empty();
 		}
 		
-		Mustache mustache = engine.getMustache(viewName);
+		
+		Mustache mustache = engine.getMustache("trimou/"+viewName);
 		if (mustache != null) {
 			TrimouView trimouView = new TrimouView(mustache, new ReactiveResponseWriterImpl<>());
 			trimouView.setMustache(mustache);

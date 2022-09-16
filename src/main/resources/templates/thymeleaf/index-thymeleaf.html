@@ -6,7 +6,7 @@
 <body>
 	<div class="container">
         <div th:replace="includes :: pageHeader"></div>
-        <div class="card mb-3 shadow-sm rounded"  th:each="item : ${presentations}">
+        <div class="card mb-3 shadow-sm rounded"  th:each="item : ${reactivedata}">
             <div class="card-header">
                 <h5 class="card-title" th:text="${item.title} +' - '+ ${item.speakerName}">Title - Speakername</h5>
             </div>
