@@ -28,18 +28,20 @@ public class LiqpView extends AbstractView {
 	}
 	
 	protected String renderModel(Map<String, Object> model, ServerWebExchange serverWebExchange) throws RuntimeException {
-		String templateUrl = "templates/liqp/index-liqp.liqp";
+		String templateUrl = "classpath:templates/liqp/index-liqp.liqp";
 		try {
-			//TODO cannot find file
 			File templateFile = ResourceUtils.getFile(templateUrl);
 			if (templateFile.exists()) {
 				// Liqp serializes the entire "model" to JSON Object and then to Map. This fails for custom and Spring classes
 				model.remove("springMacroRequestContext");
 				model.remove("org.springframework.validation.BindingResult.i18n");
+				model.remove("org.springframework.validation.BindingResult.presentations");
+				model.remove("org.springframework.validation.BindingResult.reactivedata");
 				model.remove("i18n");
+				model.remove("reactivedata");
 				
 				// Just in case, we need it as in all other view resolvers
-				model.put("contextPath", serverWebExchange.getRequest().getPath());
+				model.put("contextPath", serverWebExchange.getRequest().getPath().value());
 				
 				return Template.parse(templateFile).render(model);
 			} else {
@@ -55,7 +57,7 @@ public class LiqpView extends AbstractView {
 	@Override
 	protected Mono<Void> renderInternal(Map<String, Object> model, MediaType mediaType, @NotNull ServerWebExchange serverWebExchange) {
 		
-		final Flux<Presentation> presentations = ((AsyncWrapper) model.get("presentations")).getPresentations();;
+		final Flux<Presentation> presentations = ((AsyncWrapper) model.get("presentations")).getPresentations();
 		return responseWriter.write(serverWebExchange, presentations, (res, __, a, b) -> this.renderModel(model, serverWebExchange));
 	}
 	

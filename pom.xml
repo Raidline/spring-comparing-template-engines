@@ -29,6 +29,8 @@
 		<kotlin.version>1.7.0</kotlin.version>
 		<kotlinx.html.version>0.7.5</kotlinx.html.version>
 
+		<junit-jupiter.version>5.8.0</junit-jupiter.version>
+
 		<!-- Benchmark -->
 		<jmh.version>1.35</jmh.version>
 	</properties>

@@ -3,6 +3,7 @@ package com.jeroenreijn.examples.benchmark;
 import com.jeroenreijn.examples.Launch;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -27,10 +28,10 @@ import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MINUTES)
+@Fork(value = 1)
 @State(Scope.Thread)
 public class LaunchJMH {
-    
-    
+
     private static final String[] templates = {
             "thymeleaf",
             "kotlinx",
@@ -81,27 +82,28 @@ public class LaunchJMH {
     }
     
     
-    private void benchmarkTemplate(int templateIdx) {
-        webTestClient.get()
+    private String benchmarkTemplate(int templateIdx) {
+        return new String(webTestClient.get()
                 .uri(URI.create("/async/"+templates[templateIdx]))
                 .accept(MediaType.ALL)
                 .exchange()
                 .expectStatus()
-                .isOk();
+                .isOk()
+                .expectBody().returnResult().getResponseBody());
     }
     
     @Benchmark
-    public void benchmarkThymeleaf(LaunchJMH state, Blackhole bh) {
-        benchmarkTemplate(0);
+    public String benchmarkThymeleaf() {
+        return benchmarkTemplate(0);
     }
     
     @Benchmark
-    public void benchmarkKotlinx(LaunchJMH state, Blackhole bh) {
-        benchmarkTemplate(1);
+    public String benchmarkKotlinx() {
+        return benchmarkTemplate(1);
     }
     
     @Benchmark
-    public void benchmarkHtmlFlow(LaunchJMH state, Blackhole bh) {
-        benchmarkTemplate(2);
+    public String benchmarkHtmlFlow() {
+        return benchmarkTemplate(2);
     }
 }

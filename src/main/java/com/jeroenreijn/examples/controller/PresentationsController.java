@@ -40,7 +40,6 @@ public class PresentationsController {
 	@RequestMapping(value = "/{template}", method = RequestMethod.GET)
 	public String showList(@PathVariable(value = "template") final String template,
 			final ModelMap model) {
-		System.out.println("Currently benchmarking : " + template);
 		model.addAttribute("presentations", presentationsService.findAll());
 		model.addAttribute("i18n", new i18nLayout(messageSource));
 
@@ -50,7 +49,6 @@ public class PresentationsController {
 	@GetMapping("/async/{template}")
 	public String showListWebflux(@PathVariable(value = "template") final String template,
 						   final Model model) {
-		System.out.println("Currently benchmarking : " + template);
 		final Flux<Presentation> presentations = presentationsService.findAllReactive().delayElements(Duration.ofSeconds(1L));
 		IReactiveDataDriverContextVariable rx = new ReactiveDataDriverContextVariable(presentations);
 		model.addAttribute("reactivedata", rx);
