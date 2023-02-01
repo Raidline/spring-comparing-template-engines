@@ -1,19 +1,21 @@
 package com.jeroenreijn.examples.view;
 
+import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Map;
 
-import com.jeroenreijn.examples.model.AsyncWrapper;
-import htmlflow.StaticHtml;
-import io.reactivex.rxjava3.core.Observable;
+import htmlflow.HtmlFlow;
+import htmlflow.HtmlPage;
+import htmlflow.HtmlViewAsync;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.xmlet.htmlapifaster.Body;
+import org.xmlet.htmlapifaster.Div;
+import org.xmlet.htmlapifaster.Element;
 import org.xmlet.htmlapifaster.EnumMediaType;
 import org.xmlet.htmlapifaster.EnumRelType;
 
 import com.jeroenreijn.examples.model.Presentation;
 
-import htmlflow.DynamicHtml;
-import htmlflow.HtmlView;
+import org.xmlet.htmlapifaster.Html;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.MonoSink;
 
@@ -22,21 +24,21 @@ public class HtmlFlowIndexView {
 	private final OutputStreamWriter writer;
 	private final MonoSink<DataBuffer> sub;
 	private final DataBuffer buffer;
-	
-	public final HtmlView<Map<String, Object>> view = DynamicHtml
-		.view(this::templatePresentations)
+	private final Flux<Presentation> presentations;
+
+	public final HtmlViewAsync view = HtmlFlow
+		.viewAsync(this::templatePresentations)
 		.threadSafe();
 	
-	public HtmlFlowIndexView(OutputStreamWriter writer, MonoSink<DataBuffer> sub, DataBuffer buffer) {
+	public HtmlFlowIndexView(OutputStreamWriter writer, MonoSink<DataBuffer> sub, DataBuffer buffer,
+							 Flux<Presentation> presentations) {
 		this.writer = writer;
 		this.sub = sub;
 		this.buffer = buffer;
+		this.presentations = presentations;
 	}
 	
-	private void templatePresentations(DynamicHtml<Map<String, Object>> view, Map<String, Object> map) {
-		Flux<Presentation> presentations = ((AsyncWrapper) map.get("presentations")).getPresentations();
-		final Observable<Presentation> observable = Observable.fromPublisher(presentations);
-		
+	private void templatePresentations(HtmlPage view) {
 		view
 			.html()
 				.head()
@@ -58,13 +60,25 @@ public class HtmlFlowIndexView {
 						.div().attrClass("pb-2 mt-4 mb-3 border-bottom")
 							.h1().text("JFall 2013 Presentations - HtmlFlow").__()
 						.__() // div
-						.dynamic(__ -> observable.map(HtmlFlowIndexView::template)
-										.doOnNext(writer::append)
-										.doOnComplete(() -> {
-											writer.flush();
-											sub.success(buffer);
-										})
-										.subscribe() // foreach
+						.await((div,model,onCompletion) -> presentations
+								.doOnNext(presentation -> template(div, presentation))
+								.doOnNext(pres -> {
+									try {
+										writer.append(pres.toString());
+									} catch (IOException e) {
+										throw new RuntimeException(e);
+									}
+								})
+								.doOnComplete(() -> {
+									onCompletion.finish();
+									try {
+										writer.flush();
+									} catch (IOException e) {
+										throw new RuntimeException(e);
+									}
+									sub.success(buffer);
+								})
+								.subscribe() // foreach
 						)
 					.__() // container
 				.script().attrSrc("/webjars/jquery/3.1.1/jquery.min.js").__()
@@ -74,8 +88,8 @@ public class HtmlFlowIndexView {
 	}
 	
 	
-	private static String template(Presentation presentation) {
-		return StaticHtml.view()
+	private static void template(Div<Body<Html<HtmlPage>>> div, Presentation presentation) {
+		div
 				.div().attrClass("card mb-3 shadow-sm rounded")
 				.div().attrClass("card-header")
 				.h5()
@@ -91,7 +105,6 @@ public class HtmlFlowIndexView {
 						.text(presentation.getSummary())
 				)
 				.__() // div
-				.__()
-				.render(); // div
+				.__(); // div
 	}
 }

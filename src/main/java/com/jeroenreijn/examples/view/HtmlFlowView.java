@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class HtmlFlowView extends AbstractView {
 	
@@ -27,6 +28,13 @@ public class HtmlFlowView extends AbstractView {
 		
 		final Flux<Presentation> presentations = ((AsyncWrapper) model.get(PRESENTATIONS_KEY)).getPresentations();
 		return responseWriter.write(serverWebExchange, presentations,
-				(sub, presents, writer, buffer) -> new HtmlFlowIndexView(writer, sub, buffer).view.render(model));
+				(sub, presents, writer, buffer) -> {
+					try {
+						return new HtmlFlowIndexView(writer, sub, buffer, presentations).view.renderAsync(model)
+								.get();
+					} catch (InterruptedException | ExecutionException e) {
+						throw new RuntimeException(e);
+					}
+				});
 	}
 }
